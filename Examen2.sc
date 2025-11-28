@@ -24,26 +24,50 @@ val catalogo: List[Libro] = List(
 
 case class AutorInfo(autor: String, totalPaginas: Int, cantidadLibros: Int)
 
+// Mejoras del codigo dadas por la IA
 
+def encontrarAutorMasProductivo(
+                                 catalogo: List[Libro],
+                                 paginasMinimas: Int,
+                                 anioMinimo: Int
+                               ): Option[AutorInfo] = {
 
-def agruparlibros(catalogo: List[Libro], paginas: Int, anio: Int): List[Libro] = catalogo.filter(l => l.anio >= anio && l.paginas >= paginas)
-def agruparautores(librosfiltrados: List[Libro]): List[String] =  librosfiltrados.map(_.autor).distinct
-def recorrerlibros(librosFiltrados: List[Libro], autores: List[String]): List[AutorInfo] = {
-  autores.map { a =>
-    val librosDelAutor = librosFiltrados.filter(l => l.autor == a)
-    val sumapaginas = librosDelAutor.map(_.paginas).sum
-    val sumalibros = librosDelAutor.length
-    AutorInfo(a, sumapaginas, sumalibros)
+  // Paso 1: Filtrar libros que cumplen las condiciones
+  val librosFiltrados = catalogo.filter(libro =>
+    libro.anio >= anioMinimo && libro.paginas >= paginasMinimas
+  )
+
+  // Si no hay libros que cumplan las condiciones, retornar None
+  if (librosFiltrados.isEmpty) {
+    return None
   }
+
+  // Paso 2: Obtener lista de autores sin repetir
+  val autoresUnicos = librosFiltrados.map(_.autor).distinct
+
+  // Paso 3: Para cada autor, calcular sus estadísticas
+  val informacionAutores = autoresUnicos.map { autor =>
+    val librosDelAutor = librosFiltrados.filter(_.autor == autor)
+    val totalPaginas = librosDelAutor.map(_.paginas).sum
+    val cantidadLibros = librosDelAutor.length
+
+    AutorInfo(autor, totalPaginas, cantidadLibros)
+  }
+
+  // Paso 4: Encontrar el autor con más páginas totales
+  Some(informacionAutores.maxBy(_.totalPaginas))
 }
 
-def autormaspaginas(filtrados: List[AutorInfo]): AutorInfo = filtrados.maxBy(_.totalPaginas)
+// Uso del método
+val resultado = encontrarAutorMasProductivo(catalogo, 150, 2006)
 
-
-val libros = agruparlibros(catalogo, 150, 2006)
-val autores = agruparautores(libros)
-val autori = recorrerlibros(libros, autores)
-val autorMayor = autormaspaginas(autori)
-
+resultado match {
+  case Some(autor) =>
+    println(s"Autor más productivo: ${autor.autor}")
+    println(s"Total de páginas: ${autor.totalPaginas}")
+    println(s"Cantidad de libros: ${autor.cantidadLibros}")
+  case None =>
+    println("No se encontraron libros que cumplan con los criterios")
+}
 
 
